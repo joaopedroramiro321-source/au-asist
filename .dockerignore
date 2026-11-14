@@ -1,0 +1,14 @@
+*
+!requirements.txt
+!main.py
+!index.html
+!static/
+!static/**
+!gestao.py
+!migration.sql
+
+!cenario.py
+!reposicao.py
+!conversa.py
+!assistente.js
+!formas_assistente.py

@@ -1,0 +1,56 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AU Asist | Gestão de estoque</title>
+<link rel="icon" href="/static/logo_nova.png" type="image/png">
+<link rel="stylesheet" href="/static/painel.css"></head><body>
+<aside class="sidebar"><div class="brand"><img src="/static/logo_nova.png" alt="">AU Asist</div><div class="nav-label">Área de trabalho</div><nav aria-label="Navegação principal"></nav><div class="sidefoot">Analytics Unseen</div></aside>
+<main><header class="topbar"><div class="crumb">Gestão de estoque &nbsp;/&nbsp; <span id="current"></span></div><div class="date"><span data-icon="calendar"></span><span id="date">Gestão de estoque</span></div></header>
+<div class="workspace"><div class="hero"><div class="eyebrow">Inteligência de estoque</div><h1></h1><p id="intro"></p>
+</div>
+<p id="status" role="status"></p><div id="view"></div></div></main>
+<dialog id="modal"><form id="record"><h2></h2><div class="fields"></div><p class="error" role="alert"></p><button class="primary">Salvar</button> <button type="button" id="cancel">Cancelar</button></form></dialog>
+<section id="chat" hidden aria-label="Assistente AU Asist"><header><h2>Assistente AU Asist</h2><button id="nova">Nova conversa</button><button id="fechar" aria-label="Fechar assistente">×</button></header><div id="log" role="log" aria-live="polite"></div><small id="processando" role="status"></small><form id="ask"><input required maxlength="500" aria-label="Pergunta ao assistente" placeholder="Escreva sua pergunta"><button>Enviar</button></form></section><button id="toggle" aria-controls="chat" aria-expanded="false"><span data-icon="spark"></span>Assistente AU Asist</button>
+<script>
+const el=(tag,text)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;return n}, $=s=>document.querySelector(s);
+const tabs=['Visão estratégica','Produtos','Fornecedores'], money=v=>v==null?'—':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}), day=v=>v?v.slice(0,10).split('-').reverse().join('/'):'—';
+let tab=tabs[0],p,c,endpoint,method;
+function button(label,fn){const b=el('button',label);b.onclick=fn;return b}
+const paths={box:'M3 7l9-5 9 5v10l-9 5-9-5z M3 7l9 5 9-5 M12 12v10',dashboard:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',truck:'M2 5h12v12H2z M14 9h4l4 5v3h-8 M8 18a2 2 0 1 1-4 0 2 2 0 1 1 4 0 M21 18a2 2 0 1 1-4 0 2 2 0 1 1 4 0',calendar:'M3 5h18v16H3z M7 3v5 M17 3v5 M3 11h18',wallet:'M3 6h16v14H3z M3 6l13-4v4 M14 11h7v5h-7z',risk:'M12 3 2 20h20z M12 9v5 M12 17v.3',trend:'M3 17l6-6 4 4 8-10 M15 5h6v6',sales:'M3 20h18 M6 16v-5 M12 16V7 M18 16V3',list:'M4 6h2 M9 6h12 M4 12h2 M9 12h12 M4 18h2 M9 18h12',spark:'m10 3 2.5 6.5L19 12l-6.5 2.5L10 21l-2.5-6.5L1 12l6.5-2.5z M19 2v5 M16.5 4.5h5'};
+function icon(key){const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');svg.setAttribute('class','icon');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');path.setAttribute('d',paths[key]);svg.append(path);return svg}
+document.querySelectorAll('[data-icon]').forEach(n=>n.append(icon(n.dataset.icon)));
+for(const [i,name] of tabs.entries()){const b=button(name,()=>{tab=name;render()});b.prepend(icon(['dashboard','box','truck'][i]));$('nav').append(b)}
+function section(title,key='list'){const n=el('section'),h=el('h2',title);h.className='section-title';h.prepend(icon(key));n.append(h);return n}
+function table(title,headers,rows){const n=section(title),wrap=el('div'),t=el('table'),head=t.createTHead().insertRow();wrap.className='scroll';headers.forEach(h=>head.append(el('th',h)));const body=t.createTBody();for(const row of rows){const tr=body.insertRow();row.forEach(v=>{const td=tr.insertCell();if(v instanceof Node)td.append(v);else td.textContent=v??'—'})}if(rows.length){wrap.append(t);n.append(wrap)}else n.append(el('p','Nenhum registro.'));return n}
+const nameOf=id=>c.produtos.find(x=>x.id===id)?.nome;
+function render(){
+ $('h1').textContent=tab;$('#current').textContent=tab;$('#intro').textContent=['Acompanhe o saldo, as compras e os lotes que exigem atenção.','Consulte o catálogo e acompanhe as entradas e vendas por lote.','Gerencie os parceiros e compare as condições de fornecimento.'][tabs.indexOf(tab)];document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.textContent===tab));
+ const v=$('#view');v.replaceChildren();if(!c)return;
+ if(tab===tabs[0]){
+ const m=el('div');m.className='metrics';const revenue=c.movimentos.reduce((n,r)=>n+r.qtd*Number(r.preco_venda),0);
+ for(const [label,val] of [['Capital imobilizado',p.capital],['Perda em risco',p.perda],['Economia estimada',p.economia],['Receita de vendas',revenue]]){const a=el('article'),badge=el('span');badge.className='badge-icon';badge.append(icon(['wallet','risk','trend','sales'][m.children.length]));const title=el('span',label);title.className='metric-label';a.append(badge,title,el('strong',money(val)));m.append(a)}v.append(m);
+ const s=section('Saldo disponível por produto','box'),max=Math.max(1,...p.produtos.map(i=>i.estoque));for(const i of p.produtos){const bar=el('progress');bar.max=max;bar.value=i.estoque;const row=el('div');row.className='stock-row';bar.setAttribute('aria-label','Saldo de '+i.nome);row.append(el('span',i.nome),bar,el('b',i.estoque+' un.'));s.append(row)}v.append(s,table('Ações de compra',['Produto','Fornecedor','Unidades','Comprar até','Total'],p.compras.map(i=>[i.nome,i.fornecedor,i.quantidade,day(i.comprar_ate),money(i.total)])),table('Lotes em risco',['Produto','Lote','Validade','Unidades em risco'],p.riscos.map(i=>[i.nome,i.lote,day(i.validade),i.unidades])));
+ }else if(tab===tabs[1]){
+ const actions=el('div');actions.className='tools';for(const key of ['produto','entrada','venda'])actions.append(button(forms[key][0],()=>openForm(key)));v.append(actions,
+ table('Catálogo',['Produto','Custo','Preço de venda','Editar','Assistente'],c.produtos.map(i=>[i.nome,money(i.custo),money(i.preco_venda),button('Editar',()=>openForm('produto',{...i,preco:i.preco_venda})),button('Analisar este produto',()=>analisarProduto(i))])),
+ table('Lotes',['Lote','Produto','Fornecedor','Entrada','Validade','Custo unitário','Recebido','Saldo'],c.lotes.map(i=>[i.id,nameOf(i.produto),i.fornecedor,day(i.entrada),day(i.validade),money(i.custo),i.inicial,i.unidades])),
+ table('Movimentações',['Data','Produto','Lote','Tipo','Quantidade','Preço unitário','Total'],c.movimentos.map(i=>[day(i.instante),nameOf(c.lotes.find(l=>l.id===i.lote)?.produto),i.lote,i.preco_venda==null?'Retirada':'Venda',i.qtd,money(i.preco_venda),money(i.preco_venda==null?null:i.preco_venda*i.qtd)])));
+ }else{const actions=el('div');actions.className='tools';actions.append(button('Cadastrar fornecedor',()=>openForm('fornecedor')),button('Registrar oferta',()=>openForm('oferta')));v.append(actions,table('Cadastro de fornecedores',['Nome','CNPJ','Endereço','Contato',''],c.fornecedores.map(i=>[i.nome,i.cnpj,i.endereco,i.contato,button('Editar',()=>openForm('fornecedor',i))])),table('Ofertas por produto',['Fornecedor','Produto','Preço unitário','Prazo','Pedido mínimo'],c.ofertas.map(i=>[i.fornecedor,nameOf(i.produto),money(i.preco),i.prazo+' dias',i.minimo])))}
+}
+const forms={
+ produto:['Cadastrar produto','produtos','nome custo preco'],entrada:['Registrar entrada','entradas','produto fornecedor cofre entrada validade quantidade custo'],venda:['Registrar venda','vendas','lote data quantidade preco'],fornecedor:['Cadastrar fornecedor','fornecedores','nome cnpj endereco contato'],oferta:['Registrar oferta','ofertas','produto fornecedor preco prazo minimo']};
+const labels={nome:'Nome',custo:'Custo unitário (R$)',preco:'Preço unitário (R$)',produto:'Produto',fornecedor:'Fornecedor',cofre:'Cofre',entrada:'Data de entrada',validade:'Validade',quantidade:'Quantidade',lote:'Lote',data:'Data da venda',cnpj:'CNPJ (14 dígitos)',endereco:'Endereço',contato:'Contato',prazo:'Entrega (dias)',minimo:'Pedido mínimo'};
+function openForm(key,item={}){
+ if(!c.edicao_local){$('#status').textContent='Cadastros e movimentações estão disponíveis na instalação local.';return}
+ const [title,path,keys]=forms[key];endpoint='/'+path;method='POST';if(key==='produto'&&item.id){endpoint+='/'+item.id;method='PUT'}
+ const form=$('#record');form.querySelector('h2').textContent=item.nome?'Editar '+key:title;form.querySelector('.error').textContent='';const fields=form.querySelector('.fields');fields.replaceChildren();
+ const opts={produto:c.produtos.map(i=>[i.id,i.nome]),fornecedor:c.fornecedores.map(i=>[i.nome,i.nome]),cofre:c.cofres.map(i=>[i.id,i.nome]),lote:c.lotes.filter(i=>i.unidades>0).map(i=>[i.id,i.id+' · '+nameOf(i.produto)+' · '+i.unidades+' un.'])};
+ for(const k of keys.split(' ')){const label=el('label',labels[k]),n=el(opts[k]?'select':'input');n.name=k;n.required=k!=='contato';if(opts[k])for(const [value,t] of opts[k])n.add(new Option(t,value));
+ else if(['entrada','validade','data'].includes(k)){n.type='date';if(k!=='validade'){n.max=p.dia;n.value=p.dia}}
+ else if(['custo','preco','quantidade','prazo','minimo'].includes(k)){n.type='number';n.min=['quantidade','minimo'].includes(k)?1:0;n.step=['custo','preco'].includes(k)?'0.01':'1'}
+ else if(k==='cnpj'){n.pattern='[0-9]{14}';n.maxLength=14}
+ if(item[k]!=null)n.value=item[k];if(key==='fornecedor'&&item.nome&&k==='nome')n.readOnly=true;label.append(n);fields.append(label)}
+ $('#modal').showModal()
+}
+async function load(){const results=await Promise.all(['/painel','/catalogo'].map(async url=>{const r=await fetch(url);if(!r.ok)throw Error();return r.json()}));[p,c]=results;$('#date').textContent='Cenário de '+day(p.dia);render()}
+$('#record').onsubmit=async e=>{e.preventDefault();const f=e.currentTarget,b=f.querySelector('.primary');b.disabled=true;try{const r=await fetch(endpoint,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(f)))});if(!r.ok){const a=await r.json();throw Error(typeof a.detail==='string'?a.detail:'Confira os campos do formulário.')}$('#modal').close();$('#status').textContent='Registro salvo.';try{await load()}catch{$('#status').textContent='Registro salvo. Recarregue a página para atualizar os dados.'}}catch(err){f.querySelector('.error').textContent=err.message}finally{b.disabled=false}};
+$('#cancel').onclick=()=>$('#modal').close();
+render();load().catch(()=>$('#status').textContent='Falha ao carregar os dados. Recarregue a página.');
+</script><script src="/assistente.js"></script></body></html>

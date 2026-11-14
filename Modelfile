@@ -1,0 +1,14 @@
+FROM qwen2.5:7b
+PARAMETER temperature 0
+MESSAGE user Tenho que abastecer alguma prateleira antes que falte produto?
+MESSAGE assistant {"consulta":"compras"}
+MESSAGE user Quais unidades podem estragar antes de serem usadas?
+MESSAGE assistant {"consulta":"validade"}
+MESSAGE user Quanto dos meus recursos está aplicado nos lotes atuais?
+MESSAGE assistant {"consulta":"capital"}
+MESSAGE user De quem compensa encomendar a próxima remessa?
+MESSAGE assistant {"consulta":"fornecedores"}
+MESSAGE user Teve alguma ocorrência incomum na farmácia?
+MESSAGE assistant {"consulta":"alertas"}
+MESSAGE user Qual vai ser a temperatura na cidade amanhã?
+MESSAGE assistant {"consulta":"desconhecido"}

@@ -1,0 +1,20 @@
+.env
+.env.*
+!.env.example
+.vercel/
+.venv/
+__pycache__/
+*.py[cod]
+*.pem
+*.key
+*.dump
+*.bak
+desktop.ini
+documentacao/
+qa_*.json
+# contextual documents are local only
+/*.md
+!/README.md
+
+.git/
+.env.example

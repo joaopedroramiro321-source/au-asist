@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: cofre
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure .env}
+      TZ: America/Sao_Paulo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U demo -d cofre"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  app:
+    build: .
+    volumes:
+      - ./main.py:/app/main.py:ro
+      - ./conversa.py:/app/conversa.py:ro
+      - ./reposicao.py:/app/reposicao.py:ro
+      - ./cenario.py:/app/cenario.py:ro
+      - ./assistente.js:/app/assistente.js:ro
+      - ./gestao.py:/app/gestao.py:ro
+      - ./migration.sql:/app/migration.sql:ro
+      - ./static:/app/static:ro
+      - ./index.html:/app/index.html:ro
+    ports: ["127.0.0.1:8000:8000"]
+    environment:
+      DATABASE_URL: postgresql://demo:${POSTGRES_PASSWORD:?Configure .env}@db/cofre
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-au-asist:7b}
+      OLLAMA_ATIVO: ${OLLAMA_ATIVO:-1}
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  pgdata: {}
