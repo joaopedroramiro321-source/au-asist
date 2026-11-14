@@ -64,4 +64,4 @@ A raiz do repositório contém a aplicação FastAPI (`main:app`), com Python 3.
 
 O cliente não precisa de variáveis de ambiente. Na Vercel, as rotas de alteração de catálogo, ofertas, entradas e vendas ficam bloqueadas, e a consulta de fornecedores omite documentos e contatos. O planejamento continua disponível para o visitante. Não há integração de pagamentos, split ou webhooks.
 
-A URL da demonstração será incluída após a verificação do ambiente público.
+Demonstração pública para os avaliadores: [abrir AU Asist](https://au-asist.vercel.app).
